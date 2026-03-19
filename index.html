@@ -627,6 +627,18 @@ function setupTokenClient(cid) {
 
 function handleGChipClick() {
   if (isSignedIn) { renderSheetsStatus(); showTab('imp'); return; }
+  if (!gapiReady) {
+    setChip('syncing', '⏳ Carregando API...');
+    const iv = setInterval(() => {
+      if (gapiReady) {
+        clearInterval(iv);
+        setChip('off', 'Conectar Google Sheets');
+        openAuthModal();
+      }
+    }, 300);
+    setTimeout(() => { clearInterval(iv); setChip('off', 'Conectar Google Sheets'); }, 8000);
+    return;
+  }
   openAuthModal();
 }
 
@@ -649,7 +661,11 @@ async function initGoogleAuth() {
   setupTokenClient(cid);
   closeAuthModal();
   setChip('syncing', '🔄 Autenticando...');
-  tokenClient.requestAccessToken({ prompt: 'consent' });
+  try {
+    tokenClient.requestAccessToken({ prompt: '' });
+  } catch(e) {
+    tokenClient.requestAccessToken({ prompt: 'consent' });
+  }
 }
 
 function setChip(st, txt) {
@@ -1156,12 +1172,35 @@ document.getElementById('ccl-date').value=new Date().toISOString().split('T')[0]
 populateSelects();
 renderAll();
 
-// Auto-reconnect if client ID was saved
+// Auto-reconnect if client ID was saved — silent re-auth (no prompt)
 if (clientId) {
-  setTimeout(() => {
-    if (gapiReady) setupTokenClient(clientId);
-    else { const iv=setInterval(()=>{if(gapiReady){setupTokenClient(clientId);clearInterval(iv);}},500); }
-  }, 500);
+  const tryAutoReconnect = () => {
+    if (!gapiReady) { setTimeout(tryAutoReconnect, 400); return; }
+    setupTokenClient(clientId);
+    // Try silent auth first (no popup)
+    setChip('syncing', '🔄 Reconectando...');
+    google.accounts.oauth2.initTokenClient({
+      client_id: clientId,
+      scope: SCOPES,
+      prompt: '',
+      callback: async (resp) => {
+        if (resp.error) {
+          setChip('off', 'Conectar Google Sheets');
+          return;
+        }
+        // Set token on gapi client
+        gapi.client.setToken({ access_token: resp.access_token });
+        isSignedIn = true;
+        setChip('syncing', '🔄 Carregando dados...');
+        await findOrCreateSpreadsheet();
+        await loadFromSheets();
+        setChip('on', '✅ Google Sheets conectado');
+        toast('✅ Reconectado automaticamente!');
+        renderSheetsStatus();
+      },
+    }).requestAccessToken({ prompt: '' });
+  };
+  setTimeout(tryAutoReconnect, 600);
 }
 
 // Drag & drop import
