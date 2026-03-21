@@ -269,16 +269,13 @@ canvas{display:block}
 <!-- 2. BANCOS -->
 <div class="tab" id="tab-banks">
   <div class="fcard">
-    <div class="ftitle">Novo banco / conta</div>
-    <div class="frow c3">
-      <div class="fg"><label>Nome</label><input id="bk-name" placeholder="Ex: Nubank"></div>
-      <div class="fg"><label>Tipo</label>
+    <div class="ftitle">Nova conta bancária</div>
+    <div class="frow c4">
+      <div class="fg"><label>Nome do banco</label><input id="bk-name" placeholder="Ex: Nubank"></div>
+      <div class="fg"><label>Tipo de conta</label>
         <select id="bk-type"><option>Conta Corrente</option><option>Conta Poupança</option><option>Conta Salário</option><option>Corretora</option><option>Carteira Digital</option><option>Outro</option></select>
       </div>
-      <div class="fg"><label>Saldo (R$)</label><input id="bk-bal" type="number" placeholder="0,00" step="0.01"></div>
-    </div>
-    <div class="frow c2">
-      <div class="fg"><label>Ícone (emoji)</label><input id="bk-ico" placeholder="🏦" maxlength="4"></div>
+      <div class="fg"><label>Saldo atual (R$)</label><input id="bk-bal" type="number" placeholder="0,00" step="0.01"></div>
       <div class="fg"><label>Cor</label><div class="color-opts" id="bk-colors"></div></div>
     </div>
     <button class="sbtn" onclick="addBank()">+ Adicionar conta</button>
@@ -332,15 +329,12 @@ canvas{display:block}
 <!-- 4. CARTÕES -->
 <div class="tab" id="tab-cards">
   <div class="fcard" id="cc-form-card">
-    <div class="ftitle">Novo cartão</div>
-    <div class="frow c3">
-      <div class="fg"><label>Nome do cartão</label><input id="cc-name" placeholder="Ex: Nubank Roxinho"></div>
-      <div class="fg"><label>Banco emissor</label><input id="cc-bank-name" placeholder="Ex: Nubank"></div>
-      <div class="fg"><label>Dia de vencimento</label><input id="cc-due" type="number" placeholder="10" min="1" max="31"></div>
-    </div>
-    <div class="frow c2">
+    <div class="ftitle">Novo cartão de crédito</div>
+    <div class="frow c4">
+      <div class="fg"><label>Nome do cartão</label><input id="cc-name" placeholder="Ex: Roxinho, Gold, Platinum"></div>
+      <div class="fg"><label>Banco emissor</label><select id="cc-bank-sel" onchange="onCardBankChange()"></select></div>
       <div class="fg"><label>Limite (R$)</label><input id="cc-limit" type="number" placeholder="5000" min="0"></div>
-      <div class="fg"><label>Cor</label><div class="color-opts" id="cc-colors"></div></div>
+      <div class="fg"><label>Dia de vencimento</label><input id="cc-due" type="number" placeholder="10" min="1" max="31"></div>
     </div>
     <button class="sbtn" onclick="addCard()">+ Adicionar cartão</button>
   </div>
@@ -359,7 +353,7 @@ canvas{display:block}
         <div class="fg"><label>Categoria</label><select id="ccl-cat"></select></div>
         <div class="fg"><label>Data da compra</label><input id="ccl-date" type="date"></div>
       </div>
-      <div class="frow c3">
+      <div class="frow c4">
         <div class="fg"><label>Parcelas</label>
           <select id="ccl-parcelas">
             <option value="1">À vista (1x)</option>
@@ -370,6 +364,8 @@ canvas{display:block}
             <option value="24">24x</option><option value="36">36x</option>
           </select>
         </div>
+        <div class="fg"><label>Mês de cobrança</label><input id="ccl-mescob" type="month"></div>
+        <div class="fg"><label>Pago por</label><input id="ccl-pagador" placeholder="Ex: João, Maria..."></div>
         <div class="fg"><label>Observação</label><input id="ccl-obs" placeholder="Opcional"></div>
       </div>
       <button class="sbtn" onclick="addCardLancamento()">+ Adicionar lançamento no cartão</button>
@@ -449,12 +445,39 @@ canvas{display:block}
 
 <!-- 7. IMPORTAR -->
 <div class="tab" id="tab-imp">
-  <div class="imp-zone" onclick="document.getElementById('imp-file').click()">
+  <div class="imp-zone" id="imp-zone-drop" onclick="document.getElementById('imp-file').click()">
     <div style="font-size:32px;margin-bottom:12px">📂</div>
-    <div style="font-size:14px;font-weight:500;margin-bottom:6px">Importar arquivo de backup</div>
-    <div style="font-size:12px;color:var(--mu);line-height:1.6">Clique ou arraste um arquivo <strong>.json</strong> exportado pelo Finctr<br>ou um <strong>.csv</strong> com colunas: data, descrição, valor, tipo, categoria</div>
+    <div style="font-size:14px;font-weight:500;margin-bottom:6px">Importar arquivo</div>
+    <div style="font-size:12px;color:var(--mu);line-height:1.6">Clique ou arraste um arquivo <strong>.json</strong> (backup Finctr) ou <strong>.csv</strong> de transações</div>
   </div>
   <input type="file" id="imp-file" accept=".json,.csv" style="display:none" onchange="handleImport(this)">
+
+  <!-- MODELO DE IMPORTAÇÃO -->
+  <div class="fcard">
+    <div class="ftitle">Modelos de importação</div>
+    <p style="font-size:13px;color:var(--mu);margin-bottom:16px;line-height:1.7">Baixe um modelo e preencha seus dados. O <strong style="color:var(--text)">.json</strong> importa tudo (bancos, cartões, metas). O <strong style="color:var(--text)">.csv</strong> importa apenas transações — útil para exportar do seu banco.</p>
+    <div style="background:var(--s2);border:1px solid var(--b2);border-radius:var(--rs);padding:14px;margin-bottom:14px">
+      <div style="font-size:12px;font-weight:500;color:var(--mu);text-transform:uppercase;letter-spacing:.6px;margin-bottom:8px">Formato CSV esperado</div>
+      <div style="font-family:var(--mono);font-size:11px;color:var(--teal);line-height:1.8">
+        data,descricao,valor,tipo,categoria,banco,obs<br>
+        2026-03-01,Salário,6500.00,inc,Salário,Nubank,<br>
+        2026-03-05,Supermercado,250.00,exp,Alimentação,Itaú,<br>
+        2026-03-10,Aporte,1000.00,inv,Investimentos,XP,
+      </div>
+    </div>
+    <div style="background:var(--s2);border:1px solid var(--b2);border-radius:var(--rs);padding:14px;margin-bottom:16px">
+      <div style="font-size:12px;font-weight:500;color:var(--mu);text-transform:uppercase;letter-spacing:.6px;margin-bottom:8px">Valores do campo "tipo"</div>
+      <div style="display:flex;gap:10px;flex-wrap:wrap">
+        <span style="background:var(--gd);color:var(--green);font-size:11px;padding:3px 10px;border-radius:20px;font-family:var(--mono)">inc → Receita</span>
+        <span style="background:var(--rd);color:var(--red);font-size:11px;padding:3px 10px;border-radius:20px;font-family:var(--mono)">exp → Despesa</span>
+        <span style="background:var(--bd);color:var(--blue);font-size:11px;padding:3px 10px;border-radius:20px;font-family:var(--mono)">inv → Investimento</span>
+      </div>
+    </div>
+    <div style="display:flex;gap:10px;flex-wrap:wrap">
+      <button onclick="downloadCSVTemplate()" style="padding:9px 16px;border-radius:var(--rs);font-family:var(--font);font-size:13px;font-weight:500;cursor:pointer;background:var(--bd);border:1px solid rgba(96,152,244,.3);color:var(--blue)">⬇ Baixar modelo .csv</button>
+      <button onclick="downloadJSONTemplate()" style="padding:9px 16px;border-radius:var(--rs);font-family:var(--font);font-size:13px;font-weight:500;cursor:pointer;background:var(--s2);border:1px solid var(--b2);color:var(--mu)">⬇ Baixar modelo .json</button>
+    </div>
+  </div>
 
   <!-- GOOGLE SHEETS STATUS -->
   <div class="fcard" id="sheets-status-card">
@@ -520,7 +543,7 @@ const SHEETS_CONFIG = {
   transactions: ['id','type','val','desc','cat','date','bank','obs'],
   banks:        ['id','name','type','bal','ico','color'],
   cards:        ['id','name','bank','due','limit','color'],
-  cardLancamentos: ['id','cardId','val','desc','cat','date','parcelas','obs'],
+  cardLancamentos: ['id','cardId','val','desc','cat','date','parcelas','mesCob','pagador','obs'],
   categories:   ['id','name','ico','type','color'],
   recurrents:   ['id','desc','val','cat','type','freq','next','bank'],
   goals:        ['id','name','ico','target','cur','dead','color'],
@@ -550,8 +573,8 @@ function defaultState() {
   const y=new Date().getFullYear(), m=String(new Date().getMonth()+1).padStart(2,'0');
   return {
     banks:[
-      {id:1,name:'Nubank',type:'Conta Corrente',bal:3200,ico:'💜',color:'#a06af4'},
-      {id:2,name:'Itaú',type:'Conta Corrente',bal:8500,ico:'🧡',color:'#f4b060'},
+      {id:1,name:'Nubank',type:'Conta Corrente',bal:3200,color:'#a06af4'},
+      {id:2,name:'Itaú',type:'Conta Corrente',bal:8500,color:'#f4b060'},
     ],
     cards:[
       {id:1,name:'Nubank Roxinho',bank:'Nubank',due:10,limit:15000,color:'#a06af4'},
@@ -819,7 +842,8 @@ function signOut() {
 // ═══════════════════════════════════════════
 // UTILS
 // ═══════════════════════════════════════════
-function fmt(n){ return 'R$ '+Math.abs(n).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2}); }
+function safeNum(v){const n=parseFloat(String(v).replace(',','.'));return isNaN(n)?0:n;}
+function fmt(n){const v=safeNum(n);return 'R$ '+v.toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});}
 function gmy(off=0){ const d=new Date(); d.setDate(1); d.setMonth(d.getMonth()+off); return {m:d.getMonth(),y:d.getFullYear(),lbl:MONTHS[d.getMonth()]+' '+d.getFullYear()}; }
 function txMonth(off=0){ const{m,y}=gmy(off); return S.transactions.filter(t=>{ const d=new Date(t.date+'T00:00:00'); return d.getMonth()===m&&d.getFullYear()===y; }); }
 function catById(name){ return S.categories.find(c=>c.name===name)||{ico:'📦',color:'#8080a0'}; }
@@ -883,7 +907,7 @@ function renderDash(){
   document.getElementById('mbars').innerHTML=md.map(d=>`<div class="mcol"><div class="mwrap"><div class="mbar i" style="height:${Math.round(d.i/mx*96)}px"></div><div class="mbar e" style="height:${Math.round(d.e/mx*96)}px"></div></div><span class="mlbl">${d.lbl}</span></div>`).join('');
   const topMax=cats[0]?.[1]||1;
   document.getElementById('topbars').innerHTML=cats.slice(0,6).map(([cn,v])=>{const cat=catById(cn);return`<div class="bar-row"><span class="blabel">${cn}</span><div class="btrack"><div class="bfill" style="width:${Math.round(v/topMax*100)}%;background:${cat.color}"></div></div><span class="bval">${fmt(v)}</span></div>`;}).join('')||'<span style="color:var(--mu2);font-size:12px">Nenhuma despesa este mês</span>';
-  document.getElementById('dash-banks').innerHTML=S.banks.map(b=>`<div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--b)"><span style="font-size:16px">${b.ico}</span><span style="flex:1;font-size:13px;color:var(--mu)">${b.name}</span><span style="font-family:var(--mono);font-size:13px;color:${b.color}">${fmt(Number(b.bal))}</span></div>`).join('')+`<div style="display:flex;justify-content:space-between;padding:10px 0 0;font-size:12px"><span style="color:var(--mu)">Total</span><span style="font-family:var(--mono);font-weight:500;color:var(--green)">${fmt(totalBanks)}</span></div>`;
+  document.getElementById('dash-banks').innerHTML=S.banks.map(b=>{const initials=b.name.split(' ').slice(0,2).map(w=>w[0]||'').join('').toUpperCase();return`<div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--b)"><div style="width:26px;height:26px;border-radius:7px;background:${b.color}22;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:${b.color}">${initials}</div><span style="flex:1;font-size:13px;color:var(--mu)">${b.name}</span><span style="font-family:var(--mono);font-size:13px;color:${b.color}">${fmt(safeNum(b.bal))}</span></div>`;}).join('')+`<div style="display:flex;justify-content:space-between;padding:10px 0 0;font-size:12px"><span style="color:var(--mu)">Total</span><span style="font-family:var(--mono);font-weight:500;color:var(--green)">${fmt(totalBanks)}</span></div>`;
   const now=new Date(),in7=new Date(now.getTime()+7*86400000);
   const due=S.recurrents.filter(r=>{const d=new Date(r.next+'T00:00:00');return d>=now&&d<=in7;});
   document.getElementById('dash-due').innerHTML=due.length?due.map(r=>{const d=new Date(r.next+'T00:00:00');return`<div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--b)"><span style="font-size:14px">${catById(r.cat).ico}</span><div style="flex:1"><div style="font-size:13px;font-weight:500">${r.desc}</div><div style="font-size:11px;color:var(--mu2)">${d.toLocaleDateString('pt-BR',{day:'2-digit',month:'short'})}</div></div><span style="font-family:var(--mono);font-size:13px;color:var(--amber)">${fmt(Number(r.val))}</span></div>`;}).join(''):'<div style="font-size:12px;color:var(--mu2);padding:12px 0">Nenhuma conta nos próximos 7 dias 🎉</div>';
@@ -895,25 +919,33 @@ function changeMonth(d){monthOff+=d;renderDash();}
 // ═══════════════════════════════════════════
 function renderBanks(){
   colorPicker('bk-colors','bk','#2dd4a0');
-  const total=S.banks.reduce((a,b)=>a+Number(b.bal),0);
-  document.getElementById('bk-count').textContent=`${S.banks.length} conta${S.banks.length!==1?'s':''} · Total: ${fmt(total)}`;
-  document.getElementById('bank-grid').innerHTML=S.banks.map(b=>`
-    <div class="bank-card" style="color:${b.color}">
+  const total=S.banks.reduce((a,b)=>a+safeNum(b.bal),0);
+  document.getElementById('bk-count').textContent=`${S.banks.length} conta${S.banks.length!==1?'s':''}`;
+  document.getElementById('bank-grid').innerHTML=S.banks.map(b=>{
+    const bal=safeNum(b.bal);
+    const initials=b.name.split(' ').slice(0,2).map(w=>w[0]||'').join('').toUpperCase();
+    return`<div class="bank-card" style="border-color:${b.color}33">
       <button class="xbtn" onclick="deleteBank(${b.id})" style="position:absolute;top:10px;right:10px;color:var(--mu2)">×</button>
-      <div style="font-size:22px;margin-bottom:10px">${b.ico}</div>
-      <div style="font-size:13px;font-weight:500;color:var(--mu);margin-bottom:4px">${b.name}</div>
-      <div style="font-size:22px;font-weight:300;font-family:var(--mono);letter-spacing:-1px;color:${b.color}">${fmt(Number(b.bal))}</div>
-      <span style="font-size:10px;font-weight:500;padding:2px 8px;border-radius:20px;display:inline-block;margin-top:6px;background:${b.color}22;color:${b.color}">${b.type}</span>
-    </div>
-  `).join('')+`<div class="bank-card" style="border:2px dashed var(--b2);cursor:default;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;min-height:120px"><span style="font-size:24px;color:var(--mu2)">+</span><span style="font-size:12px;color:var(--mu2)">Total: ${fmt(total)}</span></div>`;
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:14px">
+        <div style="width:42px;height:42px;border-radius:12px;background:${b.color}22;border:1px solid ${b.color}44;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:600;color:${b.color};flex-shrink:0">${initials}</div>
+        <div>
+          <div style="font-size:14px;font-weight:500;color:var(--text)">${b.name}</div>
+          <div style="font-size:11px;color:var(--mu);margin-top:2px">${b.type}</div>
+        </div>
+      </div>
+      <div style="height:1px;background:var(--b);margin-bottom:14px"></div>
+      <div style="font-size:11px;color:var(--mu);margin-bottom:4px;text-transform:uppercase;letter-spacing:.6px">Saldo</div>
+      <div style="font-size:24px;font-weight:300;font-family:var(--mono);letter-spacing:-1px;color:${b.color}">${fmt(bal)}</div>
+    </div>`;
+  }).join('')+`<div class="bank-card" style="border:2px dashed var(--b2);cursor:default;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;min-height:130px"><span style="font-size:28px;color:var(--mu2)">+</span><span style="font-size:12px;color:var(--mu2)">Total patrimônio</span><span style="font-size:16px;font-family:var(--mono);color:var(--green)">${fmt(total)}</span></div>`;
 }
 async function addBank(){
   const name=document.getElementById('bk-name').value.trim();
   const bal=parseFloat(document.getElementById('bk-bal').value)||0;
   if(!name){document.getElementById('bk-name').style.borderColor='var(--red)';return;}
-  S.banks.push({id:Date.now(),name,type:document.getElementById('bk-type').value,bal,ico:document.getElementById('bk-ico').value.trim()||'🏦',color:colorSel['bk']||'#2dd4a0'});
+  S.banks.push({id:Date.now(),name,type:document.getElementById('bk-type').value,bal,color:colorSel['bk']||'#2dd4a0'});
   await persist();renderBanks();populateSelects();
-  ['bk-name','bk-bal','bk-ico'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+  ['bk-name','bk-bal'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
   document.getElementById('bk-name').style.borderColor='';
   toast('✅ Banco adicionado e sincronizado!');
 }
@@ -954,21 +986,46 @@ async function deleteTx(id){S.transactions=S.transactions.filter(t=>t.id!==id);a
 // 4. CARTÕES
 // ═══════════════════════════════════════════
 function renderCards(){
-  colorPicker('cc-colors','cc','#a06af4');
-  if(!S.cards.length)activeCardId=null;
-  else if(!activeCardId||!S.cards.find(c=>c.id==activeCardId))activeCardId=S.cards[0].id;
+  // Populate bank selector for new card
+  const bsel=document.getElementById('cc-bank-sel');
+  if(bsel){
+    const cur=bsel.value;
+    bsel.innerHTML=S.banks.map(b=>`<option value="${b.name}" data-color="${b.color}">${b.name}</option>`).join('');
+    if(cur)bsel.value=cur;
+    onCardBankChange();
+  }
+  if(!S.cards.length){
+    activeCardId=null;
+    document.getElementById('cc-strip').innerHTML='<div style="padding:12px 0;font-size:13px;color:var(--mu)">Nenhum cartão cadastrado. Adicione um cartão acima para começar a lançar gastos.</div>';
+    document.getElementById('inner-lancamentos').style.display='none';
+    document.getElementById('inner-desembolso').style.display='none';
+    document.getElementById('itab-lancamentos').style.display='none';
+    document.getElementById('itab-desembolso').style.display='none';
+    return;
+  }
+  document.getElementById('itab-lancamentos').style.display='';
+  document.getElementById('itab-desembolso').style.display='';
+  if(!activeCardId||!S.cards.find(c=>c.id==activeCardId))activeCardId=S.cards[0].id;
   document.getElementById('cc-strip').innerHTML=S.cards.map(c=>{
-    const total=S.cardLancamentos.filter(l=>l.cardId==c.id).reduce((a,l)=>a+Number(l.val),0);
-    return`<div class="cc-pill${c.id==activeCardId?' sel':''}" style="color:${c.color}" onclick="selectCard(${c.id})">
-      <div style="width:10px;height:10px;border-radius:50%;background:${c.color};flex-shrink:0"></div>
-      <span style="font-size:13px;font-weight:500">${c.name}</span>
-      <span style="font-size:12px;font-family:var(--mono);margin-left:4px;opacity:.7">${fmt(total)}</span>
+    const bank=S.banks.find(b=>b.name===c.bank);
+    const color=bank?.color||c.color||'#a06af4';
+    const total=S.cardLancamentos.filter(l=>l.cardId==c.id).reduce((a,l)=>a+safeNum(l.val),0);
+    const initials=c.name.slice(0,2).toUpperCase();
+    return`<div class="cc-pill${c.id==activeCardId?' sel':''}" style="color:${color}" onclick="selectCard(${c.id})">
+      <div style="width:28px;height:28px;border-radius:8px;background:${color}22;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:${color};flex-shrink:0">${initials}</div>
+      <div style="display:flex;flex-direction:column;gap:1px">
+        <span style="font-size:13px;font-weight:500;line-height:1">${c.name}</span>
+        <span style="font-size:10px;opacity:.6;line-height:1">${c.bank||''} · vence dia ${c.due}</span>
+      </div>
+      <span style="font-size:12px;font-family:var(--mono);margin-left:6px;opacity:.7">${fmt(total)}</span>
       <button onclick="event.stopPropagation();deleteCard(${c.id})" style="background:none;border:none;color:rgba(255,255,255,.2);cursor:pointer;margin-left:4px;font-size:13px;padding:0 2px" onmouseover="this.style.color='var(--red)'" onmouseout="this.style.color='rgba(255,255,255,.2)'">×</button>
     </div>`;
   }).join('');
   populateCatSelect('ccl-cat','exp');
-  if(innerTab==='lancamentos')renderCardLancamentos();
-  if(innerTab==='desembolso')renderDesembolso();
+  showInnerTab(innerTab);
+}
+function onCardBankChange(){
+  // noop - color comes from bank automatically on save
 }
 function selectCard(id){
   activeCardId=id;
@@ -978,11 +1035,15 @@ function selectCard(id){
 }
 async function addCard(){
   const name=document.getElementById('cc-name').value.trim();
+  const bankName=document.getElementById('cc-bank-sel')?.value||'';
   if(!name){document.getElementById('cc-name').style.borderColor='var(--red)';return;}
-  const nc={id:Date.now(),name,bank:document.getElementById('cc-bank-name').value.trim(),due:parseInt(document.getElementById('cc-due').value)||10,limit:parseFloat(document.getElementById('cc-limit').value)||0,color:colorSel['cc']||'#a06af4'};
+  if(!bankName){toast('Selecione um banco emissor',2500);return;}
+  const bank=S.banks.find(b=>b.name===bankName);
+  const color=bank?.color||'#a06af4';
+  const nc={id:Date.now(),name,bank:bankName,due:parseInt(document.getElementById('cc-due').value)||10,limit:safeNum(document.getElementById('cc-limit').value),color};
   S.cards.push(nc);activeCardId=nc.id;
   await persist();renderCards();populateSelects();
-  ['cc-name','cc-bank-name','cc-due','cc-limit'].forEach(id=>{const el=document.getElementById(id);if(el){el.value='';el.style.borderColor='';}});
+  ['cc-name','cc-due','cc-limit'].forEach(id=>{const el=document.getElementById(id);if(el){el.value='';el.style.borderColor='';}});
   toast('✅ Cartão adicionado!');
 }
 async function deleteCard(id){S.cards=S.cards.filter(c=>c.id!=id);S.cardLancamentos=S.cardLancamentos.filter(l=>l.cardId!=id);if(activeCardId==id)activeCardId=S.cards[0]?.id||null;await persist();renderCards();populateSelects();}
@@ -998,17 +1059,19 @@ function renderCardLancamentos(){
   document.getElementById('ccl-count').textContent=`${items.length} lançamento${items.length!==1?'s':''} — ${card?.name||''}`;
   document.getElementById('ccl-list').innerHTML=items.map(l=>{
     const cat=catById(l.cat),d=new Date(l.date+'T00:00:00');
-    const parcStr=l.parcelas>1?` · ${l.parcelas}x de ${fmt(Number(l.val)/Number(l.parcelas))}`:'';
-    return`<div class="item"><div class="iico" style="background:${cat.color}22">${cat.ico}</div><div class="iinfo"><div class="iname">${l.desc}</div><div class="isub">${d.toLocaleDateString('pt-BR',{day:'2-digit',month:'short'})}${parcStr}${l.obs?' · '+l.obs:''}</div></div><span class="ibadge" style="background:${cat.color}22;color:${cat.color};margin-right:8px">${l.cat}</span>${l.parcelas>1?`<span class="ibadge" style="background:var(--ad);color:var(--amber);margin-right:8px">${l.parcelas}x</span>`:''}<div class="ival r">-${fmt(Number(l.val))}</div><button class="xbtn" onclick="deleteCardLancamento(${l.id})">×</button></div>`;
+    const parcStr=l.parcelas>1?` · ${l.parcelas}x de ${fmt(safeNum(l.val)/safeNum(l.parcelas))}`:'';
+    const mesCobStr=l.mesCob?` · ${l.mesCob}`:'';
+    const pagStr=l.pagador?` · ${l.pagador}`:'';
+    return`<div class="item"><div class="iico" style="background:${cat.color}22">${cat.ico}</div><div class="iinfo"><div class="iname">${l.desc}</div><div class="isub">${d.toLocaleDateString('pt-BR',{day:'2-digit',month:'short'})}${parcStr}${mesCobStr}${pagStr}${l.obs?' · '+l.obs:''}</div></div><span class="ibadge" style="background:${cat.color}22;color:${cat.color};margin-right:8px">${l.cat}</span>${l.parcelas>1?`<span class="ibadge" style="background:var(--ad);color:var(--amber);margin-right:8px">${l.parcelas}x</span>`:''}${l.pagador?`<span class="ibadge" style="background:var(--bd);color:var(--blue);margin-right:8px">${l.pagador}</span>`:''}<div class="ival r">-${fmt(safeNum(l.val))}</div><button class="xbtn" onclick="deleteCardLancamento(${l.id})">×</button></div>`;
   }).join('')||'<div style="padding:24px;text-align:center;color:var(--mu2);font-size:13px">Nenhum lançamento neste cartão</div>';
 }
 async function addCardLancamento(){
   if(!activeCardId){toast('Selecione um cartão primeiro');return;}
   const val=parseFloat(document.getElementById('ccl-val').value), desc=document.getElementById('ccl-desc').value.trim(), date=document.getElementById('ccl-date').value;
   if(!val||!desc||!date){if(!val)document.getElementById('ccl-val').style.borderColor='var(--red)';return;}
-  S.cardLancamentos.unshift({id:Date.now(),cardId:activeCardId,val,desc,cat:document.getElementById('ccl-cat').value,date,parcelas:parseInt(document.getElementById('ccl-parcelas').value)||1,obs:document.getElementById('ccl-obs').value});
+  S.cardLancamentos.unshift({id:Date.now(),cardId:activeCardId,val,desc,cat:document.getElementById('ccl-cat').value,date,parcelas:parseInt(document.getElementById('ccl-parcelas').value)||1,mesCob:document.getElementById('ccl-mescob').value,pagador:document.getElementById('ccl-pagador').value.trim(),obs:document.getElementById('ccl-obs').value});
   await persist();renderCardLancamentos();renderCards();
-  ['ccl-val','ccl-desc','ccl-obs'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+  ['ccl-val','ccl-desc','ccl-obs','ccl-pagador','ccl-mescob'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
   document.getElementById('ccl-val').style.borderColor='';
   toast('✅ Lançamento adicionado!');
 }
@@ -1147,6 +1210,42 @@ async function handleImport(input){
     catch(e){toast('Erro ao ler arquivo',3000);}
   }
   input.value='';
+}
+function downloadCSVTemplate(){
+  const rows=[
+    ['data','descricao','valor','tipo','categoria','banco','obs'],
+    ['2026-03-01','Salário','6500.00','inc','Salário','Nubank',''],
+    ['2026-03-05','Supermercado','250.00','exp','Alimentação','Itaú',''],
+    ['2026-03-10','Aporte XP','1000.00','inv','Investimentos','XP','Aporte mensal'],
+    ['2026-03-12','Aluguel','1800.00','exp','Moradia','Itaú',''],
+  ];
+  const csv=rows.map(r=>r.join(',')).join('\n');
+  const b=new Blob([csv],{type:'text/csv'}),u=URL.createObjectURL(b),a=document.createElement('a');
+  a.href=u;a.download='finctr-modelo.csv';a.click();URL.revokeObjectURL(u);
+  toast('✅ Modelo CSV baixado!');
+}
+function downloadJSONTemplate(){
+  const y=new Date().getFullYear(),m=String(new Date().getMonth()+1).padStart(2,'0');
+  const template={
+    banks:[{id:1,name:'Nubank',type:'Conta Corrente',bal:3200,color:'#a06af4'},{id:2,name:'Itaú',type:'Conta Corrente',bal:8500,color:'#f4b060'}],
+    cards:[{id:1,name:'Roxinho',bank:'Nubank',due:10,limit:15000,color:'#a06af4'}],
+    cardLancamentos:[{id:1,cardId:1,val:299,desc:'Nike Store',cat:'Vestuário',date:`${y}-${m}-03`,parcelas:3,mesCob:`${y}-${m}`,pagador:'João',obs:''}],
+    categories:[
+      {id:1,name:'Salário',ico:'💼',type:'inc',color:'#2dd4a0'},
+      {id:4,name:'Alimentação',ico:'🛒',type:'exp',color:'#f4b060'},
+      {id:5,name:'Moradia',ico:'🏠',type:'exp',color:'#f46060'},
+      {id:11,name:'Outros',ico:'📦',type:'any',color:'#8080a0'},
+    ],
+    transactions:[
+      {id:1,type:'inc',val:6500,desc:'Salário',cat:'Salário',date:`${y}-${m}-05`,bank:'Nubank',obs:''},
+      {id:2,type:'exp',val:1800,desc:'Aluguel',cat:'Moradia',date:`${y}-${m}-07`,bank:'Itaú',obs:''},
+    ],
+    recurrents:[{id:1,desc:'Netflix',val:55.9,cat:'Outros',type:'exp',freq:'monthly',next:`${y}-${m}-20`,bank:'Nubank'}],
+    goals:[{id:1,name:'Viagem',ico:'✈️',target:15000,cur:4200,dead:'2026-12-01',color:'#2dd4a0'}],
+  };
+  const b=new Blob([JSON.stringify(template,null,2)],{type:'application/json'}),u=URL.createObjectURL(b),a=document.createElement('a');
+  a.href=u;a.download='finctr-modelo.json';a.click();URL.revokeObjectURL(u);
+  toast('✅ Modelo JSON baixado!');
 }
 function exportJSON(){const b=new Blob([JSON.stringify(S,null,2)],{type:'application/json'});const u=URL.createObjectURL(b),a=document.createElement('a');a.href=u;a.download='finctr-backup-'+new Date().toISOString().slice(0,10)+'.json';a.click();URL.revokeObjectURL(u);toast('✅ Exportado!');}
 function exportCSV(){const rows=[['Data','Descrição','Valor','Tipo','Categoria','Banco','Obs']];S.transactions.forEach(t=>rows.push([t.date,t.desc,t.val,t.type,t.cat,t.bank||'',t.obs||'']));const csv=rows.map(r=>r.map(v=>`"${v}"`).join(',')).join('\n');const b=new Blob([csv],{type:'text/csv'}),u=URL.createObjectURL(b),a=document.createElement('a');a.href=u;a.download='finctr-tx-'+new Date().toISOString().slice(0,10)+'.csv';a.click();URL.revokeObjectURL(u);toast('✅ CSV exportado!');}
